@@ -12,16 +12,6 @@ def gjpEncrypt(data):
         return base64.b64encode(xor(data,"37526").encode()).decode()
 def gjpDecrypt(data):
         return xor(base64.b64decode(data.encode()).decode(),"37526")
-def getGJUsers(target):
-    data={
-        "secret":"Wmfd2893gb7",
-        "str":target
-    }
-    request = requests.post("http://www.boomlings.com/database/getGJUsers20.php",data=data,headers={"User-Agent": ""}).text.split(":")[1::2]
-    username = request[0]
-    uuid = request[2]
-    accountid = request[10]
-    return (username,accountid,uuid)
 def parseNONG(level,prefix):
     data = {
         "levelID": level,
@@ -30,8 +20,9 @@ def parseNONG(level,prefix):
     req=requests.post("http://www.boomlings.com/database/downloadGJLevel22.php", data=data,headers={"User-Agent":""}).text.split(":")
     name=req[3]
     desc=base64.b64decode(req[5]).decode()
+    song=int(req[49])
     link=desc.replace(prefix,"",1)
-    return name,link
+    return name,link,song
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -47,8 +38,7 @@ class App(customtkinter.CTk):
             self.ld1.configure(text=info[0])
             self.ld2.configure(text=info[1])
             link=info[1]
-            splitted=link.split("/")
-            fn=self.entry1.get()+"\\"+splitted[len(splitted)-1]
+            fn=self.entry1.get()+"\\"+str(info[2])+".mp3"
             with open(fn,"wb") as f:
                 response = requests.get(link,stream=True)
                 totalLength = response.headers.get("content-length")
@@ -130,12 +120,10 @@ class App(customtkinter.CTk):
         self.progressbar = customtkinter.CTkProgressBar(self.progressbarFrame)
         self.progressbar.grid(row=1, column=0, padx=(20, 10), pady=(10, 10), sticky="ew")
 
-        self.checkboxFrame = customtkinter.CTkFrame(self)
-        self.checkboxFrame.grid(row=0, column=2, padx=(20, 20), pady=(20, 0), sticky="nsew")
-        self.autoFolder = customtkinter.CTkCheckBox(master=self.checkboxFrame, text="AutoFolder (WIP)", state="disabled")
-        self.autoFolder.grid(row=1, column=0, pady=(20, 0), padx=20, sticky="n")
-        self.autoID = customtkinter.CTkCheckBox(master=self.checkboxFrame, text="AutoID (WIP)", state="disabled")
-        self.autoID.grid(row=2, column=0, pady=(20, 0), padx=20, sticky="n")
+        self.textFrame = customtkinter.CTkFrame(self)
+        self.textFrame.grid(row=0, column=2, padx=(20, 20), pady=(20, 0), sticky="nsew")
+        self.tutorial = customtkinter.CTkLabel(master=self.textFrame, text="Make sure the level description\ncontains a link to the\n NONG song!\n\nThanks for using NumbersTada's\nNONG Downloader!")
+        self.tutorial.grid(row=0, column=0, pady=(20, 0), padx=20, sticky="n")
 
         self.appereanceMenu.set("Dark")
         self.scalingMenu.set("100%")
